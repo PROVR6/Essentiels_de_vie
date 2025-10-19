@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server"; import type { NextRequest } from "next/server";
+export function middleware(req: NextRequest) { const url = req.nextUrl; if (url.pathname.startsWith("/api") || url.pathname.startsWith("/_next") || url.pathname === "/favicon.ico") { return NextResponse.next(); }
+  const user = process.env.BASIC_AUTH_USER; const pass = process.env.BASIC_AUTH_PASS; if (!user || !pass) return NextResponse.next(); const auth = req.headers.get("authorization"); const unauthorized = () => new NextResponse("Authentication required", { status: 401, headers: { "WWW-Authenticate": 'Basic realm="Protected"' } }); if (!auth?.startsWith("Basic ")) return unauthorized(); const base64 = auth.split(" ")[1]; const [u, p] = Buffer.from(base64, "base64").toString().split(":"); if (u !== user || p !== pass) return unauthorized(); return NextResponse.next(); }
+export const config = { matcher: ["/((?!api|_next|favicon.ico).*)"] };
